@@ -46,14 +46,23 @@ AuditLogs.logModifiers = function () {
   });
 };
 
+// These are fields which application code and user actions should not be
+// allowedto modify.
+// XXX we should enforce this. We should use a deny method for each of these
+// fields, note that collection hooks run before the allow/deny logic.
+AuditLogs.reservedFields = ['dateModified', 'dateCreated'];
+
 AuditedCollection = function (name) {
   var result = new Mongo.Collection(name);
   result.before.insert(function (userId, doc) {
-    doc.createdAt = new Date();
+    // Note this silently overwrites any existing dateCreated property
+    doc.dateCreated = new Date();
   });
   result.before.update(function (userId, doc, fieldNames, modifier, options) {
     modifier.$set = modifier.$set || {};
-    modifier.$set.modifiedAt = new Date();
+
+    // Note this silently overwrites any existing dateModified property
+    modifier.$set.dateModified = new Date();
   });
   result.after.insert(function (userId, doc) {
     var metadata = AuditLogs.getMetadata(doc, {

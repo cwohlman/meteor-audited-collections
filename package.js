@@ -1,7 +1,7 @@
 Package.describe({
   name: 'cwohlman:audited-collections',
-  summary: ' /* Fill me in! */ ',
-  version: '0.1.0',
+  summary: 'Timestamps and logging for mongo collections.',
+  version: "0.1.1",
   git: ' /* Fill me in! */ '
 });
 
