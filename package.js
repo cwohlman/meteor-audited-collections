@@ -1,7 +1,7 @@
 Package.describe({
   name: 'cwohlman:audited-collections',
   summary: 'Timestamps and logging for mongo collections.',
-  version: "0.1.1",
+  version: "0.1.2",
   git: 'https://github.com/cwohlman/meteor-audited-collections.git'
 });
 
