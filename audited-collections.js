@@ -54,57 +54,61 @@ AuditLogs.reservedFields = ['dateModified', 'dateCreated'];
 
 AuditedCollection = function (name) {
   var result = new Mongo.Collection(name);
-  result.before.insert(function (userId, doc) {
-    // Note this silently overwrites any existing dateCreated property
-    doc.dateCreated = new Date();
-  });
-  result.before.update(function (userId, doc, fieldNames, modifier, options) {
-    modifier.$set = modifier.$set || {};
 
-    // Note this silently overwrites any existing dateModified property
-    modifier.$set.dateModified = new Date();
-  });
-  result.after.insert(function (userId, doc) {
-    var metadata = AuditLogs.getMetadata(doc, {
-      collectionName: name
-      , userId: userId
+  if (Meteor.isServer) {
+    result.before.insert(function (userId, doc) {
+      // Note this silently overwrites any existing dateCreated property
+      doc.dateCreated = new Date();
     });
-    metadata.documentId = doc._id;
-    metadata.userId = userId;
-    metadata.dateLogged = new Date();
-    metadata.actionType = 'insert';
-    metadata.collectionName = name;
+    result.before.update(function (userId, doc, fieldNames, modifier, options) {
+      modifier.$set = modifier.$set || {};
 
-    AuditLogs.insert(metadata);
-  });
-  result.after.update(function (userId, doc, fieldNames, modifier, options) {
-    var metadata = AuditLogs.getMetadata(doc, {
-      collectionName: name
-      , userId: userId
-      , fieldNames: fieldNames
-      , modifier: modifier
-      , options: options
+      // Note this silently overwrites any existing dateModified property
+      modifier.$set.dateModified = new Date();
     });
-    metadata.documentId = doc._id;
-    metadata.userId = userId;
-    metadata.dateLogged = new Date();
-    metadata.actionType = 'update';
-    metadata.collectionName = name;
+    result.after.insert(function (userId, doc) {
+      var metadata = AuditLogs.getMetadata(doc, {
+        collectionName: name
+        , userId: userId
+      });
+      metadata.documentId = doc._id;
+      metadata.userId = userId;
+      metadata.dateLogged = new Date();
+      metadata.actionType = 'insert';
+      metadata.collectionName = name;
 
-    AuditLogs.insert(metadata);
-  });
-  result.after.remove(function (userId, doc) {
-    var metadata = AuditLogs.getMetadata(doc, {
-      collectionName: name
-      , userId: userId
+      AuditLogs.insert(metadata);
     });
-    metadata.documentId = doc._id;
-    metadata.userId = userId;
-    metadata.dateLogged = new Date();
-    metadata.actionType = 'remove';
-    metadata.collectionName = name;
+    result.after.update(function (userId, doc, fieldNames, modifier, options) {
+      var metadata = AuditLogs.getMetadata(doc, {
+        collectionName: name
+        , userId: userId
+        , fieldNames: fieldNames
+        , modifier: modifier
+        , options: options
+      });
+      metadata.documentId = doc._id;
+      metadata.userId = userId;
+      metadata.dateLogged = new Date();
+      metadata.actionType = 'update';
+      metadata.collectionName = name;
 
-    AuditLogs.insert(metadata);
-  });
+      AuditLogs.insert(metadata);
+    });
+    result.after.remove(function (userId, doc) {
+      var metadata = AuditLogs.getMetadata(doc, {
+        collectionName: name
+        , userId: userId
+      });
+      metadata.documentId = doc._id;
+      metadata.userId = userId;
+      metadata.dateLogged = new Date();
+      metadata.actionType = 'remove';
+      metadata.collectionName = name;
+
+      AuditLogs.insert(metadata);
+    });    
+  }
+
   return result;
 };
